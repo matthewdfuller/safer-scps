@@ -82,17 +82,17 @@ You can also create a CloudWatch dashboard to visualize the SCP errors in real-t
 5. Click "Add widget"
 6. Select "Logs Table" as the widget type
 7. Select the log group `/aws/events/scp-error-events`
-10. Click "Add widget"
-11. Select "Metric" as the widget type
-12. Select the "Line" type
-13. Select the "ScpErrors" namespace
-14. Select "Query" and enter the following:
+8. Click "Add widget"
+9. Select "Metric" as the widget type
+10. Select the "Line" type
+11. Select the "ScpErrors" namespace
+12. Select "Query" and enter the following:
   - Namespace: ScpErrors
   - Metric Name: COUNT(ScpErrors)
   - Group By: Account
-15. Select the "Options" tab and change the Period to "30 seconds"
-16. Enter a label, such as "SCP Errors Account:" 
-17. Alternatively, enter the following in the "Source" tab:
+13. Select the "Options" tab and change the Period to "30 seconds"
+14. Enter a label, such as "SCP Errors Account:" 
+15. Alternatively, enter the following in the "Source" tab:
 ```
 {
     "metrics": [
@@ -112,8 +112,19 @@ You can also create a CloudWatch dashboard to visualize the SCP errors in real-t
     "liveData": true
 }
 ```
-18. Duplicate the widget and change the "Group By" to "Action"
+16. Duplicate the widget and change the "Group By" to "Action"
 
 ![Metrics](docs/metrics.png)
 
 You can now edit the time range and enable auto-update to see the SCP errors in real-time.
+
+## Cost Considerations
+
+This solution is designed to be as cost-effective as possible. Assuming you do not have 100s of 1000s of SCP errors per month, the cost should be ~$0.
+
+* The events logged in the member accounts are **free**, since they are AWS default service events.
+* Matched events that are sent cross-account to the management account are charged at the standard EventBridge rate of **$1 per million events**.
+* Events sent across regions may also incur data transfer costs.
+* The CloudWatch log group is charged at the standard CloudWatch Logs rate of **$0.50 per GB**.
+
+See [EventBridge Pricing](https://aws.amazon.com/eventbridge/pricing/) and [CloudWatch Logs Pricing](https://aws.amazon.com/cloudwatch/pricing/) for more information.
