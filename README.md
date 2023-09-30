@@ -128,3 +128,9 @@ This solution is designed to be as cost-effective as possible. Assuming you do n
 * The CloudWatch log group is charged at the standard CloudWatch Logs rate of **$0.50 per GB**.
 
 See [EventBridge Pricing](https://aws.amazon.com/eventbridge/pricing/) and [CloudWatch Logs Pricing](https://aws.amazon.com/cloudwatch/pricing/) for more information.
+
+## Limitations
+
+* This solution does not support cross-region deployments. The EventBridge rule must be deployed in each region in each member account.
+* SCP error messages can be finicky. The rule pattern is designed to match on the exact error message text `deny in a service control policy`, which may change in the future, or not be present in all errors. If you notice that the rule is not matching on the error message, you can update the rule pattern to match on a different part of the error message.
+* I haven't tested this with data events (e.g., S3 reads).
