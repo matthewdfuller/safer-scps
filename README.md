@@ -1,12 +1,12 @@
-# Real-Time SCP Error Monitor
+# Safer SCPs: Real-Time SCP Error Monitor
+
+![Dashboard](docs/dashboard.png)
 
 AWS Service Control Policies (SCPs) are a powerful cloud security tool, but they can have an expansive blast radius in large environments. While careful testing in QA and targeting smaller sets of OUs can reduce the rollout risk, SCPs do not have a dry-run or audit mode and therefore cannot be fully tested against the exact production environment until after they are applied. Many organizations rely on CloudTrail logs to monitor their SCP rollouts, but those logs can often be delayed over 15 minutes (a long time during a possible outage!).
 
 This repo, "Safer SCPs," leverages AWS EventBridge to aggregate CloudTrail events from Organization member accounts in real-time. It uses an EventBridge rule pattern to match on the error message text "deny in a service control policy" and then routes matched events to an event bus in the Organization management account for observation.
 
 This allows the user rolling out the SCP to live-tail the logs, watching for a possible spike in "Access Denied" errors caused by their SCP changes.
-
-![Dashboard](docs/dashboard.png)
 
 ## Resources
 
