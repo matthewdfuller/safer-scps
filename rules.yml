@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SCP Error Monitor - Rule to send SCP errors to management event bus
+Parameters:
+  EventBusArn:
+    Type: String
+    Description: ARN of the event bus in the management account
+    Default: arn:aws:events:us-east-1:123456789101:event-bus/scp-errors-event-bus
+Resources:
+  EventBusIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: send-events-cross-account
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !Ref EventBusArn
+  EventRule0:
+    Type: AWS::Events::Rule
+    DependsOn:
+      - EventBusIAMRole
+    Properties:
+      Description: Rule to send SCP errors to event bus
+      EventBusName: default
+      EventPattern:
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          errorCode:
+            - AccessDenied
+          errorMessage:
+            - suffix: deny in a service control policy
+      Name: scp-errors-rule
+      State: ENABLED
+      Targets:
+        - Id: IdScpErrorsEventBusRuleTarget
+          Arn: !Ref EventBusArn
+          RoleArn: !GetAtt
+            - EventBusIAMRole
+            - Arn

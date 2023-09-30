@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: SCP Error Monitor - Event bus for SCP errors from member accounts
+Parameters:
+  OrgId:
+    Type: String
+    Description: AWS Organization ID
+    Default: o-123456789101
+Resources:
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: '/aws/events/scp-errors-events'
+      RetentionInDays: 7
+  CloudWatchLogGroupMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref CloudWatchLogGroup
+      FilterName: ScpErrorsFilter
+      FilterPattern: '{ $.account = * }'
+      MetricTransformations:
+        - MetricName: ScpErrors
+          MetricNamespace: ScpErrors
+          MetricValue: '1'
+          Unit: Count
+          Dimensions:
+            - Key: Account
+              Value: '$.account'
+            - Key: Action
+              Value: '$.detail.eventName'
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: scp-errors-event-bus
+  EventBusPolicy0:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: AllowAllAccountsFromOrganizationToPutEvents
+      EventBusName: scp-errors-event-bus
+      Statement:
+        Sid: AllowAllAccountsFromOrganizationToPutEvents
+        Effect: Allow
+        Principal: '*'
+        Action: events:PutEvents
+        Condition:
+          StringEquals:
+            aws:PrincipalOrgID: !Ref OrgId
+        Resource:
+          Fn::GetAtt:
+            - EventBus
+            - Arn
+    DependsOn:
+      - EventBus
+  EventRule0:
+    Type: AWS::Events::Rule
+    DependsOn:
+      - EventBus
+    Properties:
+      Description: Rule to log SCP errors
+      EventBusName: scp-errors-event-bus
+      EventPattern:
+        source:
+          - prefix: ''
+      Name: scp-errors-log-rule
+      State: ENABLED
+      Targets:
+        - Id: IdScpErrorsEventBusLogRuleTarget
+          Arn: !GetAtt
+            - CloudWatchLogGroup
+            - Arn
+Outputs:
+  EventBusArn:
+    Description: ARN of the event bus
+    Value:
+      Fn::GetAtt:
+        - EventBus
+        - Arn
